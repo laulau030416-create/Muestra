@@ -251,8 +251,14 @@ export default function App() {
       <header className="w-full z-40 px-6 py-4 md:py-6 shrink-0 relative">
         <div className="max-w-full mx-auto flex items-center justify-between">
           
-          {/* Brand Logo with exact styling */}
-          <div className="flex flex-col select-none" id="brand-logo">
+          {/* Brand Logo with exact styling and falling entrance animation */}
+          <motion.div 
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col select-none" 
+            id="brand-logo"
+          >
             <div className="flex items-center gap-1.5">
               <span className="font-display font-black text-3xl tracking-tight text-slate-900">
                 icanti
@@ -262,70 +268,84 @@ export default function App() {
             <span className="text-[10px] uppercase tracking-widest text-slate-600 font-semibold -mt-1 font-mono">
               agencia digital
             </span>
-          </div>
+          </motion.div>
 
-          {/* Center Pill Menu - exactly matched to reference image */}
-          <nav className="hidden lg:flex items-center bg-black text-slate-300 rounded-full p-1 shadow-2xl border border-white/10" id="nav-pill">
+          {/* Center Pill Menu - with smooth slide-down and scaling entrance animation */}
+          <motion.nav 
+            initial={{ opacity: 0, y: -30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1.1, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="hidden lg:flex items-center bg-black text-slate-300 rounded-full p-1 shadow-2xl border border-white/10" 
+            id="nav-pill"
+          >
             <button
               onClick={() => setActiveNav('Inicio')}
-              className={`px-6 py-2 text-xs font-semibold rounded-full tracking-wide transition-all ${
+              className={`px-6 py-2 text-xs font-semibold rounded-full tracking-wide transition-all duration-300 ${
                 activeNav === 'Inicio' 
-                  ? 'bg-white text-slate-950 font-bold' 
-                  : 'hover:text-white'
+                  ? 'bg-white text-slate-950 font-bold shadow-md' 
+                  : 'hover:text-white hover:bg-white/5'
               }`}
             >
               Inicio
             </button>
             <button
               onClick={() => setActiveNav('Servicios')}
-              className={`px-6 py-2 text-xs font-semibold rounded-full tracking-wide transition-all ${
+              className={`px-6 py-2 text-xs font-semibold rounded-full tracking-wide transition-all duration-300 ${
                 activeNav === 'Servicios' 
-                  ? 'bg-white text-slate-950 font-bold' 
-                  : 'hover:text-white'
+                  ? 'bg-white text-slate-950 font-bold shadow-md' 
+                  : 'hover:text-white hover:bg-white/5'
               }`}
             >
               Servicios
             </button>
             <button
               onClick={() => setActiveNav('Portafolio')}
-              className={`px-6 py-2 text-xs font-semibold rounded-full tracking-wide transition-all ${
+              className={`px-6 py-2 text-xs font-semibold rounded-full tracking-wide transition-all duration-300 ${
                 activeNav === 'Portafolio' 
-                  ? 'bg-white text-slate-950 font-bold' 
-                  : 'hover:text-white'
+                  ? 'bg-white text-slate-950 font-bold shadow-md' 
+                  : 'hover:text-white hover:bg-white/5'
               }`}
             >
               Portafolio
             </button>
             <button
               onClick={() => setActiveNav('Contacto')}
-              className={`px-6 py-2 text-xs font-semibold rounded-full tracking-wide transition-all ${
+              className={`px-6 py-2 text-xs font-semibold rounded-full tracking-wide transition-all duration-300 ${
                 activeNav === 'Contacto' 
-                  ? 'bg-white text-slate-950 font-bold' 
-                  : 'hover:text-white'
+                  ? 'bg-white text-slate-950 font-bold shadow-md' 
+                  : 'hover:text-white hover:bg-white/5'
               }`}
             >
               Contacto
             </button>
-          </nav>
+          </motion.nav>
 
-          {/* Right Pill CTA button */}
+          {/* Right Pill CTA button with entrance drop and elegant glow effects */}
           <div className="flex items-center gap-3">
-            <button
+            <motion.button
               onClick={() => setActiveNav('Contacto')}
-              className="hidden lg:block bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-3 rounded-full shadow-lg hover:shadow-blue-500/10 transition-all select-none border border-blue-500/20"
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="hidden lg:block bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-3 rounded-full shadow-lg transition-all select-none border border-blue-400/50 glow-btn"
               id="cta-navbar-btn"
             >
               Solicita una consulta Gratuita
-            </button>
+            </motion.button>
 
             {/* Mobile menu trigger */}
-            <button
+            <motion.button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
               className="lg:hidden p-2 text-slate-900 bg-white/90 backdrop-blur-xs rounded-full border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors"
               id="mobile-menu-trigger"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            </motion.button>
           </div>
 
         </div>
@@ -363,7 +383,7 @@ export default function App() {
                     setActiveNav('Contacto');
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full text-center bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-bold text-xs"
+                  className="w-full text-center bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-bold text-xs border border-blue-400/40 glow-btn"
                 >
                   Solicita una consulta Gratuita
                 </button>
@@ -409,8 +429,11 @@ export default function App() {
       </main>
 
       {/* FULL WIDTH HORIZONTAL CAROUSEL OF HIGH FIDELITY WEB SCREENSHOTS */}
-      <section 
+      <motion.section 
         id="carousel-section" 
+        initial={{ opacity: 0, y: 120 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.4, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="w-full shrink-0 overflow-hidden relative z-10"
       >
         {/* Horizontal track featuring exact 24px (gap-[24px]) spacing, sitting completely flush at the bottom */}
@@ -438,7 +461,7 @@ export default function App() {
             ))}
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
     </div>
   );
