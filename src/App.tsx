@@ -77,9 +77,10 @@ export default function App() {
           vec2 mouseOffset = (u_mouse - 0.5) * 0.2;
 
           // Domain warping for organic, fluid-like liquid waves
-          for(float i = 1.0; i < 4.0; i++) {
-              p.x += 0.3 / i * sin(i * 2.0 * p.y + t + i * 1.2 + mouseOffset.x * 2.0) + 0.05;
-              p.y += 0.3 / i * cos(i * 2.0 * p.x + t + i * 1.8 + mouseOffset.y * 2.0) + 0.08;
+          for(int i = 1; i < 4; i++) {
+              float fi = float(i);
+              p.x += 0.3 / fi * sin(fi * 2.0 * p.y + t + fi * 1.2 + mouseOffset.x * 2.0) + 0.05;
+              p.y += 0.3 / fi * cos(fi * 2.0 * p.x + t + fi * 1.8 + mouseOffset.y * 2.0) + 0.08;
           }
 
           // A gorgeous, highly visible yet soft pastel palette of lavenders, rose-golds, and pale sky blues

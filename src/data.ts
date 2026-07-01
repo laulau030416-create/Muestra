@@ -1,8 +1,8 @@
 import { WebScreenshot } from './types';
-import imgSpace from './assets/images/web_space_logistics_1782861206611.avif';
-import imgNexori from './assets/images/web_nexori_finance_1782861215529.avif';
-import imgLuma from './assets/images/web_luma_emotional_1782861224125.avif';
-import imgAcru from './assets/images/web_acru_wealth_1782861236968.avif';
+import imgSpace from './assets/images/web_space_logistics_1782861206611.webp';
+import imgNexori from './assets/images/web_nexori_finance_1782861215529.webp';
+import imgLuma from './assets/images/web_luma_emotional_1782861224125.webp';
+import imgAcru from './assets/images/web_acru_wealth_1782861236968.webp';
 
 export const webScreenshots: WebScreenshot[] = [
   {
