@@ -424,6 +424,24 @@ export default function App() {
             Impulsa <span className="font-extrabold text-slate-900">tus ventas</span> con soluciones personalizadas <span className="font-extrabold text-slate-900 font-sans">adaptadas a tu negocio.</span>
           </motion.p>
 
+          {/* Credit text below description with subtle fade-in */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-xs sm:text-sm text-slate-500 font-sans tracking-wide font-medium select-none"
+          >
+            Diseño y Desarrollo by{' '}
+            <a 
+              href="https://eslender.es" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-blue-600 hover:text-blue-800 font-semibold hover:underline transition-all duration-300 pointer-events-auto"
+            >
+              Eslender
+            </a>
+          </motion.p>
+
         </div>
 
       </main>
