@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { webScreenshots } from './data';
 import { WebScreenshot } from './types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -32,6 +32,184 @@ export default function App() {
   const [activeNav, setActiveNav] = useState<string>('Inicio');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
+  // Carousel state for tracking user exploration of the static screenshots portfolio
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const gl = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: false });
+    if (!gl) {
+      console.warn("WebGL not supported");
+      return;
+    }
+
+    // Vertex Shader Source
+    const vsSource = `
+      attribute vec2 position;
+      void main() {
+        gl_Position = vec4(position, 0.0, 1.0);
+      }
+    `;
+
+    // Fragment Shader Source
+    const fsSource = `
+      precision highp float;
+      uniform vec2 u_resolution;
+      uniform float u_time;
+      uniform vec2 u_mouse;
+
+      vec3 palette( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d ) {
+          return a + b*cos( 6.28318*(c*t+d) );
+      }
+
+      void main() {
+          vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+          vec2 p = -1.0 + 2.0 * uv;
+          p.x *= u_resolution.x / u_resolution.y;
+
+          float t = u_time * 0.05;
+
+          // Extremely subtle offset based on mouse position
+          vec2 mouseOffset = (u_mouse - 0.5) * 0.2;
+
+          // Domain warping for organic, fluid-like liquid waves
+          for(float i = 1.0; i < 4.0; i++) {
+              p.x += 0.3 / i * sin(i * 2.0 * p.y + t + i * 1.2 + mouseOffset.x * 2.0) + 0.05;
+              p.y += 0.3 / i * cos(i * 2.0 * p.x + t + i * 1.8 + mouseOffset.y * 2.0) + 0.08;
+          }
+
+          // A gorgeous, highly visible yet soft pastel palette of lavenders, rose-golds, and pale sky blues
+          vec3 a = vec3(0.68, 0.78, 0.90); 
+          vec3 b = vec3(0.32, 0.22, 0.15); 
+          vec3 c = vec3(0.8, 0.8, 0.8);    
+          vec3 d = vec3(0.1, 0.2, 0.3);    
+
+          float value = 0.5 + 0.5 * sin(p.x + p.y + t);
+          vec3 col = palette(value, a, b, c, d);
+
+          gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    // Helper to compile shaders
+    function compileShader(source: string, type: number): WebGLShader | null {
+      const shader = gl!.createShader(type);
+      if (!shader) return null;
+      gl!.shaderSource(shader, source);
+      gl!.compileShader(shader);
+      if (!gl!.getShaderParameter(shader, gl!.COMPILE_STATUS)) {
+        console.error("Shader compile error:", gl!.getShaderInfoLog(shader));
+        gl!.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    }
+
+    const vs = compileShader(vsSource, gl.VERTEX_SHADER);
+    const fs = compileShader(fsSource, gl.FRAGMENT_SHADER);
+    if (!vs || !fs) return;
+
+    const program = gl.createProgram();
+    if (!program) return;
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error("Program linking error:", gl.getProgramInfoLog(program));
+      return;
+    }
+
+    gl.useProgram(program);
+
+    // Setup a rectangle that covers the entire canvas
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positions = new Float32Array([
+      -1.0, -1.0,
+       1.0, -1.0,
+      -1.0,  1.0,
+      -1.0,  1.0,
+       1.0, -1.0,
+       1.0,  1.0,
+    ]);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+    const positionLoc = gl.getAttribLocation(program, "position");
+    gl.enableVertexAttribArray(positionLoc);
+    gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+    const resolutionLoc = gl.getUniformLocation(program, "u_resolution");
+    const timeLoc = gl.getUniformLocation(program, "u_time");
+    const mouseLoc = gl.getUniformLocation(program, "u_mouse");
+
+    // Track mouse coordinates for subtle reactivity
+    let targetMouseX = 0.5;
+    let targetMouseY = 0.5;
+    let currentMouseX = 0.5;
+    let currentMouseY = 0.5;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      targetMouseX = e.clientX / window.innerWidth;
+      targetMouseY = 1.0 - (e.clientY / window.innerHeight);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    let animationFrameId: number;
+    let startTime = Date.now();
+
+    function resize() {
+      if (!canvas || !gl) return;
+      const displayWidth = canvas.clientWidth || window.innerWidth;
+      const displayHeight = canvas.clientHeight || window.innerHeight;
+
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function render() {
+      if (!gl) return;
+      resize();
+
+      const elapsedSeconds = (Date.now() - startTime) / 1000.0;
+      gl.uniform2f(resolutionLoc, canvas!.width, canvas!.height);
+      gl.uniform1f(timeLoc, elapsedSeconds);
+
+      // Smooth interpolation (lerp) for fluid cursor tracking
+      currentMouseX += (targetMouseX - currentMouseX) * 0.04;
+      currentMouseY += (targetMouseY - currentMouseY) * 0.04;
+      gl.uniform2f(mouseLoc, currentMouseX, currentMouseY);
+
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      animationFrameId = requestAnimationFrame(render);
+    }
+
+    render();
+
+    // Clean up
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+      if (gl) {
+        gl.deleteProgram(program);
+        gl.deleteShader(vs);
+        gl.deleteShader(fs);
+        gl.deleteBuffer(positionBuffer);
+      }
+    };
+  }, []);
+
   // Animated transitions variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -58,37 +236,21 @@ export default function App() {
   return (
     <div className="h-screen max-h-screen min-h-screen overflow-hidden bg-gradient-to-b from-[#94b3e3] via-[#cbd5e1] to-[#f8fafc] text-slate-900 font-sans relative flex flex-col justify-between select-none">
       
-      {/* ANIMATED BACKGROUND */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Subtle grid lines background */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff30_1px,transparent_1px),linear-gradient(to_bottom,#ffffff30_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-80"></div>
-        
-        {/* Animated glowing orbs (ondas de luces) */}
-        <motion.div 
-          animate={{ 
-            x: [0, 50, -50, 0],
-            y: [0, -30, 30, 0],
-            scale: [1, 1.1, 0.9, 1]
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 left-1/4 w-[500px] h-[350px] bg-blue-300/40 rounded-full blur-3xl" 
-        />
-        <motion.div 
-          animate={{ 
-            x: [0, -50, 50, 0],
-            y: [0, 40, -40, 0],
-            scale: [1, 1.2, 0.8, 1]
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-10 right-1/4 w-[500px] h-[400px] bg-indigo-300/30 rounded-full blur-3xl" 
-        />
-      </div>
+      {/* Background canvas for shader preview animation */}
+      <canvas 
+        ref={canvasRef} 
+        className="absolute inset-0 w-full h-full pointer-events-none opacity-45 z-0" 
+      />
+
+      {/* Decorative top blurred background light patterns */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[350px] bg-blue-300/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-10 right-1/4 w-[500px] h-[400px] bg-indigo-300/15 rounded-full blur-3xl pointer-events-none" />
 
       {/* HEADER NAVBAR */}
       <header className="w-full z-40 px-6 py-4 md:py-6 shrink-0 relative">
         <div className="max-w-full mx-auto flex items-center justify-between">
           
-          {/* Brand Logo */}
+          {/* Brand Logo with exact styling */}
           <div className="flex flex-col select-none" id="brand-logo">
             <div className="flex items-center gap-1.5">
               <span className="font-display font-black text-3xl tracking-tight text-slate-900">
@@ -101,7 +263,7 @@ export default function App() {
             </span>
           </div>
 
-          {/* Center Pill Menu */}
+          {/* Center Pill Menu - exactly matched to reference image */}
           <nav className="hidden lg:flex items-center bg-black text-slate-300 rounded-full p-1 shadow-2xl border border-white/10" id="nav-pill">
             <button
               onClick={() => setActiveNav('Inicio')}
@@ -280,3 +442,4 @@ export default function App() {
     </div>
   );
 }
+
