@@ -1,0 +1,6 @@
+{
+  "name": "Icanti Hero Section",
+  "description": "Sección Hero interactiva y personalizable para la agencia digital icanti, con diseño adaptable full width y previsualización de portafolio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
